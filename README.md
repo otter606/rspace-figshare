@@ -1,5 +1,5 @@
 
-Welcome to this project, which shows some example code  as how data can be retrieved from RSpace and added to Figshare programmatically.
+Welcome to this project, which shows some example code  as how data can be retrieved from RSpace and added to Figshare programmatically. More generally, this code could be adapted to perform any downstream post-processing of RSpace data.
 
 ### What it does:
 
@@ -9,12 +9,9 @@ The class `com.researchspace.rspace.figshare.RSpaceFigshareConnector` contains c
 * Download files to our machine
 * Create an article in Figshare, uploading the files, and the content of our RSpace document as a FileSet.
 
-
-
 ### Setup
 
-If you want to run this code yourself, you'll require an account on Figshare and RSpace, and to have
- created personal API tokens for the 2 sites.
+If you want to run this code yourself, you'll require an account on Figshare and RSpace, and to have created personal API tokens for the 2 sites.
  
 Next, create a file called `test-hidden.properties` in `src/test/resources` and add the following properties as key value pairs:
 
@@ -22,7 +19,7 @@ Next, create a file called `test-hidden.properties` in `src/test/resources` and 
     rspaceToken=<myrspacetoken>
     figshareToken=<myfigsharetoken>
 
-If you're using our Community site, then `rspace.url` doesn't need to set - it's the default value.
+If you're using our Community site, then `rspace.url` doesn't require setting - it's the default value.
 
 ### Running 
 
@@ -69,10 +66,10 @@ This program is not very selective about what it uploads - you could make this m
        such as a grant number or project Id?
 * Including all documents, not just those with attachments.
 * If you have structured data in your RSpace documents, with well defined fields, then you could upload the RSpace documents to Figshare in CSV format, facilitating future import into Spreadsheets or databases.
+* You could send the downloaded RSpace data to a different repository such as Dataverse or Zenodo.
 
 ## Future work
 
-RSpace web application already has an integration with Figshare. Currently using this example code, files must be downloaded to your machine, then uploaded into Figshare, which is a little unwieldy and timeconsuming for many files.
+RSpace web application already has an integration with Figshare. Currently using this example code, files must be downloaded to your machine, then uploaded into Figshare, which is a little unwieldy and time-consuming if you're sending many files to Figshare.
 
- If there is sufficient interest, we at ResearchSpace could consider making Figshare deposit directly accessible from our API.
-    
+If there is sufficient interest, we at ResearchSpace could consider making Figshare deposit directly accessible from our API.
