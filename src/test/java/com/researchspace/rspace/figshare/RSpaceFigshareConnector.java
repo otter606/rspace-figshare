@@ -37,7 +37,8 @@ import com.researchspace.figshare.model.Location;
 
 import lombok.extern.slf4j.Slf4j;
 
-@TestPropertySource(locations = "classpath:test.properties")
+@TestPropertySource(
+locations ={ "classpath:/test.properties","classpath:/test-hidden.properties"})
 @ContextConfiguration(classes = RSpaceFigshareConnector.class)
 @Slf4j
 public class RSpaceFigshareConnector extends AbstractJUnit4SpringContextTests {
@@ -55,7 +56,7 @@ public class RSpaceFigshareConnector extends AbstractJUnit4SpringContextTests {
 	public void test() throws InterruptedException, IOException {
 		template = new RestTemplate();
 		// these properties can be defined on command line,
-		// in gradle.properties as systemProp.properties or in test.properties
+		// in gradle.properties as systemProp.properties or in test-hidden.properties
 		// file.
 		this.rspaceUrl = env.getProperty("rspace.url");
 		this.rspaceToken = env.getProperty("rspaceToken");
