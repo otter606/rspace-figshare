@@ -122,7 +122,7 @@ public class RSpaceFigshareConnector extends AbstractJUnit4SpringContextTests {
         log.info("Uploading metadata file {} ", metadataFile.getName());
         figshare.uploadFile(created.getId(), metadataFile);
 
-        // now iterate over Fields, downloadin any associated file to local
+        // now iterate over Fields, downloading any associated file to local
         // machine
         // then uploading into Figshare
         for (Field fd : doc.getFields()) {
