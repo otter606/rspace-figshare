@@ -13,8 +13,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @TestPropertySource(locations = "classpath:test.properties")
 @ContextConfiguration(classes = RSpaceFigshareConnector.class)
 @Slf4j
-// @Configuration
 public class RSpaceFigshareConnector extends AbstractJUnit4SpringContextTests {
 
 	@Autowired
@@ -52,7 +49,7 @@ public class RSpaceFigshareConnector extends AbstractJUnit4SpringContextTests {
 	String rspaceToken = "";
 	String rspaceUrl = "";
 	RestTemplate template;
-	 FigshareTemplate figshare;
+	FigshareTemplate figshare;
 
 	@Test
 	public void test() throws InterruptedException, IOException {
@@ -78,6 +75,7 @@ public class RSpaceFigshareConnector extends AbstractJUnit4SpringContextTests {
 
 		for (Document doc : resp.getBody().getDocuments()) {
 			Long id = doc.getId();
+			// don't spam with too many requests.
 			Thread.sleep(1000);
 
 			Document fullDoc = null;
@@ -104,27 +102,27 @@ public class RSpaceFigshareConnector extends AbstractJUnit4SpringContextTests {
 	}
 
 	private void uploadToFigshare(Document doc) throws IOException {
-		ArticlePost post = ArticlePost.builder().author(new Author(ownerFullname(doc), null))
-		.title(doc.getName())
-		.tags(tags(doc))
-		.categories(Arrays.asList(new Integer[]{21,23}))
-		.description("test deposit fom RSpace API").build();
+		ArticlePost post = ArticlePost.builder()
+				// when we create an article, author id can be null.
+				.author(new Author(ownerFullname(doc), null))
+				.title(doc.getName())
+				.tags(tags(doc))
+				// you can get Categories from Figshare API to set your own.
+				.categories(Arrays.asList(new Integer[] { 21, 23 }))
+				.description("test deposit fom RSpace API").build();
 		Location created = figshare.createArticle(post);
-		
-		String content = "";
-		for (Field f: doc.getFields()) {
-			content += f.getContent();
-		}
-		
-		File metadataFile = File.createTempFile(doc.getName() + "-data", ".html");
-		
-		FileUtils.write(metadataFile, content, Charset.forName("UTF-8"));
+
+		// concatenate data from all fields into a single HTML file.
+		File metadataFile = concatenateFieldsToFile(doc);
 		log.info("Uploading metadata file {} ", metadataFile.getName());
 		figshare.uploadFile(created.getId(), metadataFile);
-		
-		for (Field fd: doc.getFields()) {
+
+		// now iterate over Fields, downloadin any associated file to local
+		// machine
+		// then uploading into Figshare
+		for (Field fd : doc.getFields()) {
 			List<com.researchspace.apimodel.File> files = fd.getFiles();
-			for (com.researchspace.apimodel.File file: files) {
+			for (com.researchspace.apimodel.File file : files) {
 				log.info("downloading  file {}  from RSpace", file.getName());
 				File fromRSpace = downloadFile(file);
 				log.info("uploading to Figshare");
@@ -133,32 +131,45 @@ public class RSpaceFigshareConnector extends AbstractJUnit4SpringContextTests {
 		}
 	}
 
+	private File concatenateFieldsToFile(Document doc) throws IOException {
+		String content = "";
+		for (Field f : doc.getFields()) {
+			content += f.getContent();
+		}
+
+		File metadataFile = File.createTempFile(doc.getName() + "-data", ".html");
+
+		FileUtils.write(metadataFile, content, Charset.forName("UTF-8"));
+		return metadataFile;
+	}
+
 	private File downloadFile(com.researchspace.apimodel.File file) throws IOException {
 		log.info("Retrieving file " + file.getId());
 		String url = rspaceUrl + "/files/" + file.getId() + "/file";
 		HttpHeaders headers = createHeadersWithAPiKey();
 		headers.setAccept(MediaType.parseMediaTypes(file.getContentType()));
 		HttpEntity<String> ent = new HttpEntity<>(headers);
-		ResponseEntity<byte []> resp = template.exchange(url, HttpMethod.GET, ent, byte [].class);
-		File tempFile = createTempFile(getBaseName(file.getName()), 
-				getExtension(file.getName()));
- 
+		// for production usage with large files you'd probably want to stream
+		// the response
+		// to avoid OOM errors.
+		ResponseEntity<byte[]> resp = template.exchange(url, HttpMethod.GET, ent, byte[].class);
+		File tempFile = createTempFile(getBaseName(file.getName()), getExtension(file.getName()));
+
 		FileUtils.copyInputStreamToFile(new ByteArrayInputStream(resp.getBody()), tempFile);
 		return tempFile;
-		
+
 	}
 
 	private List<String> tags(Document doc) {
-		if(!StringUtils.isBlank(doc.getTags())) {
+		if (!StringUtils.isBlank(doc.getTags())) {
 			return Arrays.asList(doc.getTags().split(","));
 		} else {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
-		
 	}
 
 	private String ownerFullname(Document doc) {
-		return doc.getOwner().getUsername() + "," + doc.getOwner().getFirstName();
+		return doc.getOwner().getLastName() + "," + doc.getOwner().getFirstName();
 	}
 
 	private HttpHeaders createHeadersWithAPiKey() {
