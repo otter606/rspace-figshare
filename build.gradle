@@ -5,7 +5,7 @@ group ='com.researchspace'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
 
-def springVersion='4.3.0.RELEASE'
+def springVersion='4.3.6.RELEASE'
 def spring_social_version ='1.1.4.RELEASE'
 def jacksonVersion='2.6.7'
 
